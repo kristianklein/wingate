@@ -44,6 +44,8 @@ private slots:
     void on_actionExport_to_CSV_triggered();
     void on_actionMonitor_sensor_triggered();
 
+    void on_actionExport_to_CSV_RPM_only_triggered();
+
 public slots:
     int getRPMfromSerial();
     void monitorRPM();

@@ -51,11 +51,11 @@ void monitorsensor::updateSensorLabel(){
     if (serial->isOpen()){
         if (sensorStatus())
         {
-            ui->label_sensorstatus->setStyleSheet("QLabel { color: green }");
+            ui->label_sensorstatus->setStyleSheet("QLabel { color: black }");
         } else {
-            ui->label_sensorstatus->setStyleSheet("QLabel { color: red }");
+            ui->label_sensorstatus->setStyleSheet("QLabel { color: white }");
         }
     } else {
-        ui->label_sensorstatus->setStyleSheet("QLabel { color: black }");
+        ui->label_sensorstatus->setStyleSheet("QLabel { color: red }");
     }
 }

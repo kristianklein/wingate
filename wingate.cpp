@@ -1011,3 +1011,76 @@ void WinGate::on_actionMonitor_sensor_triggered()
         timer->start(1000);
     }
 }
+
+void WinGate::on_actionExport_to_CSV_RPM_only_triggered()
+{
+    // Get save path from user
+    QString filename = QFileDialog::getSaveFileName(this, tr("Export to CSV"), QDir::currentPath(), tr("*.csv files (*.csv)"));
+
+    if (filename.isNull())
+    {
+        return;
+    }
+
+
+    // Add .dat extension if not already present
+    if (filename.length() > 4)
+    {
+        QString extension = filename.right(4);
+        if (extension != ".csv")
+        {
+            filename += ".csv";
+        }
+    }
+    else
+    {
+        filename += ".csv";
+    }
+
+    qDebug() << filename;
+
+
+    QFile exportFile(filename);
+    if (exportFile.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text))
+    {
+        QTextStream stream(&exportFile);
+
+
+        for (int i = 0; i < athletes->size(); i++) // Iterate over athletes
+        {
+            Athlete currentAthlete = athletes->at(i);
+
+            QString gender = "Female";
+            if (currentAthlete.getGender())
+                gender = "Male";
+
+            stream << "First name;" << currentAthlete.getFirstName() << endl;
+            stream << "Last name;" << currentAthlete.getLastName() << endl;
+            stream << "Gender;" << gender << endl;
+            stream << "Age;" << currentAthlete.getAge() << endl;
+            stream << "Height (cm);" << currentAthlete.getHeight() << endl;
+            stream << "Weight (kg);" << currentAthlete.getWeight() << endl;
+            stream << "Resistance (kg);" << currentAthlete.getResistance() << endl;
+            stream << "Attempts;" << currentAthlete.getNumAttempts() << endl;
+            stream << endl;
+
+            for (int j = 0; j < currentAthlete.getNumAttempts(); j++) // Iterate over attempts
+            {
+                QVector<double> currentAttempt = currentAthlete.getData(j);
+
+                stream << "Attempt " << j+1 << endl;
+                stream << "Time (s);Pedal frequency (rev/min);" << endl;
+
+                for (int k = 0; k < currentAttempt.size(); k++) // Iterate over data points in attempt
+                {
+                    stream << k << ";" << currentAttempt.at(k) << ";" << endl;
+                }
+
+                stream << endl;
+            }
+        }
+    }
+    exportFile.close();
+
+
+}

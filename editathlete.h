@@ -18,6 +18,9 @@ public:
     ~EditAthlete();
     Athlete getAthleteObject();
 
+private slots:
+    void on_doubleSpinBox_editAthlete_weight_valueChanged(double arg1);
+
 private:
     Ui::EditAthlete *ui;
     int index;

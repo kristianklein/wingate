@@ -36,3 +36,20 @@ Athlete NewAthlete::getAthleteObject()
     return athleteObject;
 }
 
+
+void NewAthlete::on_doubleSpinBox_weight_valueChanged(double arg1)
+{
+    double resistance = arg1 * 0.075;
+    int resistanceInt = (int)resistance;
+
+    if (resistance - resistanceInt < 0.25) {
+        resistance = resistanceInt;
+    } else if (resistance - resistanceInt >= 0.75) {
+        resistance = resistanceInt + 1.0;
+    } else {
+        resistance = resistanceInt + 0.5;
+    }
+
+    ui->doubleSpinBox_resistance->setValue(resistance);
+
+}

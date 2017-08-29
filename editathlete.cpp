@@ -51,3 +51,19 @@ Athlete EditAthlete::getAthleteObject()
     Athlete athleteObject(_firstname, _lastname, _gender, _age, _height, _weight, _resistance);
     return athleteObject;
 }
+
+void EditAthlete::on_doubleSpinBox_editAthlete_weight_valueChanged(double arg1)
+{
+    double resistance = arg1 * 0.075;
+    int resistanceInt = (int)resistance;
+
+    if (resistance - resistanceInt < 0.25) {
+        resistance = resistanceInt;
+    } else if (resistance - resistanceInt >= 0.75) {
+        resistance = resistanceInt + 1.0;
+    } else {
+        resistance = resistanceInt + 0.5;
+    }
+
+    ui->doubleSpinBox_editAthlete_resistance->setValue(resistance);
+}

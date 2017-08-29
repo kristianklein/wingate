@@ -884,6 +884,7 @@
     <addaction name="actionSave_session"/>
     <addaction name="separator"/>
     <addaction name="actionExport_to_CSV"/>
+    <addaction name="actionExport_to_CSV_RPM_only"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -949,6 +950,11 @@
   <action name="actionMonitor_sensor">
    <property name="text">
     <string>Monitor sensor</string>
+   </property>
+  </action>
+  <action name="actionExport_to_CSV_RPM_only">
+   <property name="text">
+    <string>Export to CSV (RPM only)</string>
    </property>
   </action>
  </widget>

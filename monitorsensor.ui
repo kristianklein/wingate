@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>464</width>
-    <height>278</height>
+    <height>301</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,21 +49,21 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>The dot is RED when the sensor detects black tape (low reflection).</string>
+      <string>The dot is BLACK when the sensor detects black tape (low reflection).</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>The dot is GREEN when the sensor detects the white flywheel (high reflection).</string>
+      <string>The dot is WHITE when the sensor detects the white flywheel (high reflection).</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>The dot is BLACK when the sensor is not connected.</string>
+      <string>The dot is RED when the sensor is not connected.</string>
      </property>
     </widget>
    </item>
