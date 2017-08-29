@@ -45,3 +45,5 @@ FORMS += \
     newathlete.ui \
     editathlete.ui \
     monitorsensor.ui
+
+RC_FILE = wingate.rc
