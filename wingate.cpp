@@ -274,7 +274,26 @@ void WinGate::on_pushButton_editAthlete_clicked()
     }
 
     int athleteIndex = ui->comboBox_athlete->currentIndex();
+    int numAttempts = athletes->at(athleteIndex).getNumAttempts();
 
+    if (numAttempts > 0) {
+        // Display warning
+        // Current athletes has attempts which will be deleted if the athlete info is edited
+        QString athleteName = athletes->at(athleteIndex).getFirstName() + " " + athletes->at(athleteIndex).getLastName();
+        QString editMsg = athleteName + " currently has " + QString::number(numAttempts) + " registered attempt(s). Editing the athlete info will DELETE ALL ATTEMPTS.\nAre you sure you wish to edit this athlete?";
+
+        // Dialog box to accept editing
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::warning(this,"Edit athlete warning", editMsg, QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::No)
+        {
+            return;
+        }
+
+    }
+
+
+    // Edit athlete
     editAthleteWindow = new EditAthlete(this,
                                         athletes->at(athleteIndex).getFirstName(),
                                         athletes->at(athleteIndex).getLastName(),
@@ -691,12 +710,30 @@ void WinGate::on_comboBox_data_attempt_currentIndexChanged(int index)
         {
             ui->widget_2->graph(0)->data()->clear();
         }
+
+        // Set y-axis label
+        if (ui->radioButton_rpm->isChecked()) {
+            ui->widget_2->yAxis->setLabel("Pedal frequency (rpm)");
+        } else {
+            ui->widget_2->yAxis->setLabel("Power (W)");
+        }
+
+        // Set graph range
         ui->widget_2->xAxis->setRange(0, 30);
         ui->widget_2->yAxis->setRange(0, 100);
         ui->widget_2->replot();
 
-        // Clear table
+        // Clear table and set correct header
         ui->tableWidget->clear();
+
+        ui->tableWidget->setHorizontalHeaderItem(0, new QTableWidgetItem("Time (s)"));
+
+        if (ui->radioButton_rpm->isChecked()) {
+            ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("Pedal freq. (RPM)"));
+        } else {
+            ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("Power (W)"));
+        }
+
 
         return;
     }
@@ -711,24 +748,42 @@ void WinGate::on_comboBox_data_attempt_currentIndexChanged(int index)
         ui->widget_2->graph(0)->data()->clear();
     }
 
+    // Set y-axis label
+    if (ui->radioButton_rpm->isChecked()) {
+        ui->widget_2->yAxis->setLabel("Pedal frequency (rpm)");
+    } else {
+        ui->widget_2->yAxis->setLabel("Power (W)");
+    }
+
+    // Get data from athlete object
     int athleteIndex = ui->comboBox_data_athlete->currentIndex();
+    double athleteResistance = athletes->at(athleteIndex).getResistance();
 
     QVector<double> revData = athletes->at(athleteIndex).getData(index);
     QVector<double> timeData;
+    QVector<double> powerData;
 
-    // Find max value
-    int maxValue = 0;
-    for (int i = 0; i < revData.length(); i++)
-    {
+    // Generate time data
+    for (int i = 0; i < revData.length(); i++) {
         timeData.push_back(i);
-
-        if (revData.at(i) > maxValue)
-        {
-            maxValue = revData.at(i);
-        }
     }
 
-    ui->widget_2->graph(0)->setData(timeData, revData);
+    // Generate power data
+    for (int i = 0; i < revData.length(); i++) {
+        powerData.push_back(calcPower(revData.at(i),athleteResistance));
+    }
+
+    // Find max value and set data
+    int maxValue = rpmMax(revData);
+    if (ui->radioButton_rpm->isChecked()) {
+        ui->widget_2->graph(0)->setData(timeData, revData);
+    } else {
+        maxValue = calcPower(maxValue, athleteResistance);
+        ui->widget_2->graph(0)->setData(timeData, powerData);
+    }
+
+
+
 
     if (maxValue > 20)
     {
@@ -743,14 +798,33 @@ void WinGate::on_comboBox_data_attempt_currentIndexChanged(int index)
     ui->widget_2->replot();
 
     // Update tableWidget data
+    ui->tableWidget->setHorizontalHeaderItem(0, new QTableWidgetItem("Time (s)"));
+
+    if (ui->radioButton_rpm->isChecked()) {
+        ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("Pedal freq. (RPM)"));
+    } else {
+        ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("Power (W)"));
+    }
+
+
     ui->tableWidget->setRowCount(timeData.size());
     ui->tableWidget->setColumnCount(2);
 
     for (int i = 0; i < timeData.size(); i++)
     {
         ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(i)));
-        ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(revData.at(i))));
+
+        if (ui->radioButton_rpm->isChecked()) {
+            ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(revData.at(i))));
+        } else {
+            ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(powerData.at(i))));
+        }
     }
+
+    // Update summary data (peak, average, fatigue)
+    ui->lineEdit_peakpower->setText(QString::number(peakPower(revData, athletes->at(athleteIndex).getResistance())));
+    ui->lineEdit_avgpower->setText(QString::number(averagePower(revData, athletes->at(athleteIndex).getResistance())));
+    ui->lineEdit_fatigue->setText(QString::number(fatigueIndex(revData)));
 }
 
 void WinGate::on_comboBox_data_athlete_currentIndexChanged(int index)
@@ -921,8 +995,8 @@ void WinGate::on_actionExport_to_CSV_triggered()
                 QVector<double> currentAttempt = currentAthlete.getData(j);
 
                 stream << "Attempt " << j+1 << endl;
-                stream << "Peak power (W);" << calcPower(rpmMax(currentAthlete.getData(j)), currentAthlete.getResistance()) << endl;
-                stream << "Average power (W);" << calcPower(averagePower(currentAthlete.getData(j)),currentAthlete.getResistance()) << endl;
+                stream << "Peak power (W);" << peakPower(currentAthlete.getData(j), currentAthlete.getResistance()) << endl;
+                stream << "Average power (W);" << averagePower(currentAthlete.getData(j),currentAthlete.getResistance()) << endl;
                 stream << "Fatigue index (%);" << fatigueIndex(currentAthlete.getData(j)) << endl;
                 stream << "Time (s);Pedal frequency (rev/min);Power (W);" << endl;
 
@@ -973,13 +1047,18 @@ int WinGate::rpmMinEnd(QVector<double> vec)
     return minEnd;
 }
 
-int WinGate::averagePower(QVector<double> vec)
+int WinGate::peakPower(QVector<double> vec, double resistance){
+    int rpm = rpmMax(vec);
+    return calcPower(rpm, resistance);
+}
+
+int WinGate::averagePower(QVector<double> vec, double resistance)
 {
     int averagePower, sumOfPower = 0;
 
     for (int i = 0; i < vec.size(); i++)
     {
-        sumOfPower += vec.at(i);
+        sumOfPower += calcPower(vec.at(i), resistance);
     }
 
     averagePower = sumOfPower/vec.size();
@@ -1083,4 +1162,16 @@ void WinGate::on_actionExport_to_CSV_RPM_only_triggered()
     exportFile.close();
 
 
+}
+
+void WinGate::on_radioButton_power_clicked()
+{
+    // Update data view
+    on_comboBox_data_attempt_currentIndexChanged(ui->comboBox_data_attempt->currentIndex());
+}
+
+void WinGate::on_radioButton_rpm_clicked()
+{
+    // Update data view
+    on_comboBox_data_attempt_currentIndexChanged(ui->comboBox_data_attempt->currentIndex());
 }

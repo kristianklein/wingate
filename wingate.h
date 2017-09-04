@@ -46,6 +46,10 @@ private slots:
 
     void on_actionExport_to_CSV_RPM_only_triggered();
 
+    void on_radioButton_power_clicked();
+
+    void on_radioButton_rpm_clicked();
+
 public slots:
     int getRPMfromSerial();
     void monitorRPM();
@@ -75,9 +79,9 @@ private:
     int calcPower(double revs, double resistance);
     int rpmMax(QVector<double> vec);
     int rpmMinEnd(QVector<double> vec);
-    int averagePower(QVector<double> vec);
+    int averagePower(QVector<double> vec, double resistance);
     double fatigueIndex(QVector<double> vec);
-
+    int peakPower(QVector<double> vec, double resistance);
 };
 
 #endif // WINGATE_H
